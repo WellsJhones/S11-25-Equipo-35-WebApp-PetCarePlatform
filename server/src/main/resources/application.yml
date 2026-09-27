@@ -4,8 +4,8 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID} 
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: 123 
+            client-secret: 123
             scope: 
               - openid
               - profile
@@ -13,4 +13,4 @@ spring:
 
 app:
   oauth:
-    default-password: ${GOOGLE_PASSWORD_TEMP}
+    default-password: 123

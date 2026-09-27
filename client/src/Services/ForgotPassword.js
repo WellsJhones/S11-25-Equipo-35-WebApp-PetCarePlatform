@@ -2,10 +2,10 @@ import { apiUrl } from "../Api/apiUrl";
 
 export const forgotPasswordService = async (email) => {
   const res = await fetch(
-    `${apiUrl}/api/auth/forgot-password?email=${encodeURIComponent(email)}`,
+    `${apiUrl}/auth/forgot-password?email=${encodeURIComponent(email)}`,
     {
       method: "POST",
-    }
+    },
   );
 
   if (!res.ok) {
@@ -13,5 +13,5 @@ export const forgotPasswordService = async (email) => {
   }
 
   const data = await res.json();
-  return data; 
+  return data;
 };

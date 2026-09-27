@@ -1,5 +1,6 @@
 package com.pethealthtracker.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -9,25 +10,32 @@ import org.springframework.stereotype.Service;
 import com.pethealthtracker.service.EmailService;
 
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender mailSender;
+    @Autowired(required = false)
+    private JavaMailSender mailSender;
 
-    @Value("${EMAIL_USERNAME}")
+    @Value("${EMAIL_USERNAME:noreply@petcare.com}")
     private String fromEmail;
 
-    @Value("${API_URL}")
+    @Value("${API_URL:http://localhost:8080}")
     private String apiUrl;
 
     @Async
     @Override
     public void sendWelcomeEmail(String to, String firstName, String token) {
+        String verificationLink = apiUrl + "/api/auth/verify-email?token=" + token;
+
+        if (mailSender == null) {
+            log.warn("[DEMO MODE] JavaMailSender no está configurado. Enlace de verificación para {}: {}", to,
+                    verificationLink);
+            return;
+        }
+
         try {
             MimeMessage message = mailSender.createMimeMessage();
             // El 'true' aquí es para multipart (adjuntos/imágenes embebidas)
@@ -36,8 +44,6 @@ public class EmailServiceImpl implements EmailService {
             helper.setFrom(fromEmail);
             helper.setTo(to);
             helper.setSubject("¡Verifica tu cuenta en My Pet Cloud!");
-
-            String verificationLink = apiUrl + "/api/auth/verify-email?token=" + token;
 
             String htmlContent = """
                     <html>
@@ -67,6 +73,14 @@ public class EmailServiceImpl implements EmailService {
     @Async
     @Override
     public void sendPasswordResetEmail(String to, String name, String token) {
+        String resetLink = apiUrl + "/api/auth/change-password-page?token=" + token;
+
+        if (mailSender == null) {
+            log.warn("[DEMO MODE] JavaMailSender no está configurado. Enlace de restablecimiento para {}: {}", to,
+                    resetLink);
+            return;
+        }
+
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -74,8 +88,6 @@ public class EmailServiceImpl implements EmailService {
             helper.setFrom(fromEmail);
             helper.setTo(to);
             helper.setSubject("¡Restablece tu contraseña de My Pet Cloud!");
-
-            String resetLink = apiUrl + "/api/auth/change-password-page?token=" + token;
 
             String htmlContent = """
                     <html>

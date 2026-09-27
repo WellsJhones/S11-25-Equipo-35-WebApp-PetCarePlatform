@@ -4,11 +4,19 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 110,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   name: {
     fontSize: 18,

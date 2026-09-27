@@ -16,7 +16,6 @@ import { useCalendarRecord } from "../Hooks/useCalendarRecord";
 import { styles } from "../Styles/CalendarRecord";
 
 const CalendarReminderScreen = () => {
-
   const {
     username,
     selectedDate,
@@ -32,11 +31,12 @@ const CalendarReminderScreen = () => {
     getCurrentDate,
   } = useCalendarRecord();
 
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.welcomeText}>Welcome{ username }</Text>
+        <Text style={styles.welcomeText}>
+          Welcome{username ? ` ${username}` : ""}
+        </Text>
       </View>
       <View style={styles.calendarContainer}>
         <Calendar
@@ -184,6 +184,5 @@ const CalendarReminderScreen = () => {
     </View>
   );
 };
-
 
 export default CalendarReminderScreen;

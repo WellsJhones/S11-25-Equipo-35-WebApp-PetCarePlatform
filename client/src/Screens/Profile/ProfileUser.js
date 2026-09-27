@@ -4,19 +4,21 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import Layout from "../../Components/Layout";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { useProfile } from "../../Hooks/useProfile";
 import { styles } from "../../Styles/ProfileUser";
 
 export default function ProfileUser() {
-  
-  const { user, pets, loading, userData, hasPets, navigation } = useProfile();
-  
-  if (loading || !user) {
+  const { user, pets, loading, userData, hasPets, navigation, logout } =
+    useProfile();
+
+  if (loading && !user) {
     return (
       <Layout>
         <View style={styles.loadingContainer}>
@@ -27,9 +29,23 @@ export default function ProfileUser() {
     );
   }
 
+  if (!userData) {
+    return (
+      <Layout>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>No user information available</Text>
+        </View>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <Ionicons
             name="chevron-back"
@@ -40,18 +56,31 @@ export default function ProfileUser() {
           <Text>
             <Text style={styles.name}>{userData.firstName}</Text> Profile
           </Text>
-          <FontAwesome6
-            name="edit"
-            size={24}
-            color="black"
-            onPress={() => navigation.navigate("EditProfile")}
-          />
+          <View style={styles.headerActions}>
+            <FontAwesome6
+              name="edit"
+              size={20}
+              color="black"
+              style={{ marginRight: 16 }}
+              onPress={() => navigation.navigate("EditProfile")}
+            />
+            {logout && (
+              <MaterialIcons
+                name="logout"
+                size={24}
+                color="#c0392b"
+                onPress={logout}
+              />
+            )}
+          </View>
         </View>
 
         <View style={styles.sectionImage}>
           <Image
             source={{
-              uri: "https://wallpapers.com/images/featured/imagenes-de-perfil-geniales-4co57dtwk64fb7lv.jpg",
+              uri:
+                userData.profilePictureUrl ||
+                "https://wallpapers.com/images/featured/imagenes-de-perfil-geniales-4co57dtwk64fb7lv.jpg",
             }}
             style={styles.profileImage}
             resizeMode="cover"
@@ -83,6 +112,7 @@ export default function ProfileUser() {
                       source={{
                         uri:
                           pet.imageUrl ||
+                          pet.profilePictureUrl ||
                           "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPpl5XpGvsbCgINnrVk9m9UIVJcqUWQuchIA&s",
                       }}
                       style={styles.profilePets}
@@ -102,9 +132,7 @@ export default function ProfileUser() {
             )}
           </View>
         </View>
-      </View>
+      </ScrollView>
     </Layout>
   );
 }
-
-

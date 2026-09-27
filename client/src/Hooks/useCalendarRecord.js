@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getMyUser } from "../Services/getMyUser";
-import { useToken } from "./useToken";
+import { useAuth } from "../Context/AuthContext";
 import { Alert } from "react-native";
 
 export const useCalendarRecord = () => {
-
-  const token = useToken();
+  const { token } = useAuth();
   const [username, setUsername] = useState();
   const [selectedDate, setSelectedDate] = useState("");
   const [reminders, setReminders] = useState({});
@@ -25,16 +24,23 @@ export const useCalendarRecord = () => {
   useEffect(() => {
     setSelectedDate(getCurrentDate());
     loadReminders();
-    const username = async () => {
-      try {
-        const user = await getMyUser(token);
-        setUsername(user?.data?.firstName);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-    username();
   }, []);
+
+  useEffect(() => {
+    if (token) {
+      const fetchUsername = async () => {
+        try {
+          const user = await getMyUser(token);
+          if (user?.data?.firstName) {
+            setUsername(user.data.firstName);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      };
+      fetchUsername();
+    }
+  }, [token]);
 
   const loadReminders = async () => {
     try {
@@ -116,7 +122,7 @@ export const useCalendarRecord = () => {
           onPress: () => {
             const updatedReminders = { ...reminders };
             updatedReminders[date] = updatedReminders[date].filter(
-              (reminder) => reminder.id !== id
+              (reminder) => reminder.id !== id,
             );
 
             if (updatedReminders[date].length === 0) {
@@ -127,7 +133,7 @@ export const useCalendarRecord = () => {
             saveReminders(updatedReminders);
           },
         },
-      ]
+      ],
     );
   };
 

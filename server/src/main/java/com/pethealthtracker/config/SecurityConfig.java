@@ -36,8 +36,9 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
-    //! IMPORTANTE: Inyectamos el provider aquí en lugar de hacer 'new' abajo para que funcione @Value
-    private final JwtTokenProvider jwtTokenProvider; 
+    // ! IMPORTANTE: Inyectamos el provider aquí en lugar de hacer 'new' abajo para
+    // que funcione @Value
+    private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
 
     @Value("${app.oauth.default-password}")
@@ -99,13 +100,13 @@ public class SecurityConfig {
         http.sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // Añadir el filtro JWT antes del filtro de autenticación de nombre de usuario y contraseña
+        // Añadir el filtro JWT antes del filtro de autenticación de nombre de usuario y
+        // contraseña
         http.authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.oauth2Login(oauth2 -> oauth2
-                .successHandler(this.oauthSuccessHandler())
-        );
+                .successHandler(this.oauthSuccessHandler()));
         // ---------------------------------
 
         // Configuración de cabeceras para desarrollo
@@ -114,7 +115,8 @@ public class SecurityConfig {
             headers.frameOptions(frame -> frame.disable());
 
             // Configuración de caché
-            headers.cacheControl(cache -> {});
+            headers.cacheControl(cache -> {
+            });
 
             // Configuración de seguridad de contenido
             headers.contentSecurityPolicy(csp -> csp.policyDirectives(
@@ -133,11 +135,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Permitir desde cualquier origen en desarrollo
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://127.0.0.1:3000",
-                "http://localhost:5000",
-                "http://127.0.0.1:5000"));
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
 
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList(
@@ -175,23 +173,24 @@ public class SecurityConfig {
         return source;
     }
 
-
-   private AuthenticationSuccessHandler oauthSuccessHandler() {
+    private AuthenticationSuccessHandler oauthSuccessHandler() {
         return (request, response, authentication) -> {
-            
+
             if (authentication instanceof OAuth2AuthenticationToken) {
                 OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-                
+
                 String email = oauthToken.getPrincipal().getAttribute("email");
-                
+
                 String firstName = oauthToken.getPrincipal().getAttribute("given_name");
                 String lastName = oauthToken.getPrincipal().getAttribute("family_name");
-                
-                // Fallback: Si por alguna razón 'given_name' es nulo, se usa 'name' (nombre completo)
+
+                // Fallback: Si por alguna razón 'given_name' es nulo, se usa 'name' (nombre
+                // completo)
                 if (firstName == null) {
                     firstName = oauthToken.getPrincipal().getAttribute("name");
                 }
-                // Fallback: Si el apellido es nulo, ponemos un punto o guion para pasar la validación
+                // Fallback: Si el apellido es nulo, ponemos un punto o guion para pasar la
+                // validación
                 if (lastName == null) {
                     lastName = "-";
                 }
@@ -205,23 +204,25 @@ public class SecurityConfig {
                     newUser.setEmail(email);
                     newUser.setFirstName(finalFirstName);
                     newUser.setLastName(finalLastName);
-                    newUser.setPassword(oauthDefaultPassword); 
-                    
+                    newUser.setPassword(oauthDefaultPassword);
+
                     newUser.setEmailVerified(true);
                     return userRepository.save(newUser);
                 });
-                
+
                 String appJwt = jwtTokenProvider.generateToken(authentication);
-                
+
                 response.setContentType("application/json");
                 response.setStatus(HttpServletResponse.SC_OK);
-                
+
                 // Nota: Usamos finalFirstName en la respuesta JSON
-                String jsonResponse = String.format("{\"message\": \"Login exitoso\", \"token\": \"%s\", \"usuario\": \"%s\", \"email\": \"%s\"}", 
+                String jsonResponse = String.format(
+                        "{\"message\": \"Login exitoso\", \"token\": \"%s\", \"usuario\": \"%s\", \"email\": \"%s\"}",
                         appJwt, finalFirstName, email);
                 response.getWriter().write(jsonResponse);
             } else {
-                new SavedRequestAwareAuthenticationSuccessHandler().onAuthenticationSuccess(request, response, authentication);
+                new SavedRequestAwareAuthenticationSuccessHandler().onAuthenticationSuccess(request, response,
+                        authentication);
             }
         };
     }
