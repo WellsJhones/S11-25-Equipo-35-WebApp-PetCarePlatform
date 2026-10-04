@@ -32,6 +32,14 @@ export const useProfile = () => {
                   setPets([]);
                 }
               }
+            } else if (
+              isActive &&
+              (userData?.unauthorized ||
+                userData?.status === 401 ||
+                userData?.status === 403)
+            ) {
+              console.log("Token expired or unauthorized, logging out...");
+              await logout();
             }
           }
         } catch (error) {

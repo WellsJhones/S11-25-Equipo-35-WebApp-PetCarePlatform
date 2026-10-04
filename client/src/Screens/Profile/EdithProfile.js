@@ -10,6 +10,7 @@ import {
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Layout from "../../Components/Layout";
+import defaultAvatar from "../../assets/logo.png";
 
 import { styles } from "../../Styles/EdithProfile";
 import { useEdithProfile } from "../../Hooks/useEdithProfile";
@@ -54,9 +55,11 @@ export default function EditProfile() {
         </View>
         <View style={styles.imageSection}>
           <Image
-            source={{
-              uri: "https://wallpapers.com/images/featured/imagenes-de-perfil-geniales-4co57dtwk64fb7lv.jpg",
-            }}
+            source={
+              user?.profilePictureUrl
+                ? { uri: user.profilePictureUrl }
+                : defaultAvatar
+            }
             style={styles.profileImage}
             resizeMode="cover"
           />

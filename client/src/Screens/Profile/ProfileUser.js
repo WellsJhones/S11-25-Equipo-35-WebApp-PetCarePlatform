@@ -11,6 +11,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
+import defaultAvatar from "../../assets/logo.png";
+import defaultPet from "../../assets/paw.png";
+
 import { useProfile } from "../../Hooks/useProfile";
 import { styles } from "../../Styles/ProfileUser";
 
@@ -33,7 +36,39 @@ export default function ProfileUser() {
     return (
       <Layout>
         <View style={styles.loadingContainer}>
+          <MaterialIcons name="person-off" size={60} color="#ea9b56" />
           <Text style={styles.loadingText}>No user information available</Text>
+          <Text
+            style={{
+              color: "#777",
+              marginTop: 8,
+              textAlign: "center",
+              paddingHorizontal: 30,
+              fontSize: 14,
+            }}
+          >
+            Your session may have expired or the server could not be reached.
+          </Text>
+          {logout && (
+            <TouchableOpacity
+              style={{
+                marginTop: 24,
+                backgroundColor: "#c0392b",
+                paddingVertical: 12,
+                paddingHorizontal: 28,
+                borderRadius: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+              }}
+              onPress={logout}
+            >
+              <MaterialIcons name="logout" size={20} color="#fff" />
+              <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
+                Log Out
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </Layout>
     );
@@ -77,11 +112,11 @@ export default function ProfileUser() {
 
         <View style={styles.sectionImage}>
           <Image
-            source={{
-              uri:
-                userData.profilePictureUrl ||
-                "https://wallpapers.com/images/featured/imagenes-de-perfil-geniales-4co57dtwk64fb7lv.jpg",
-            }}
+            source={
+              userData.profilePictureUrl
+                ? { uri: userData.profilePictureUrl }
+                : defaultAvatar
+            }
             style={styles.profileImage}
             resizeMode="cover"
           />
@@ -106,24 +141,33 @@ export default function ProfileUser() {
 
           <View style={styles.petsContainer}>
             {hasPets
-              ? pets.map((pet, index) => (
-                  <View key={index} style={styles.petItem}>
-                    <Image
-                      source={{
-                        uri:
-                          pet.imageUrl ||
-                          pet.profilePictureUrl ||
-                          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPpl5XpGvsbCgINnrVk9m9UIVJcqUWQuchIA&s",
-                      }}
-                      style={styles.profilePets}
-                      resizeMode="cover"
-                    />
-                    <Text style={styles.namePets}>{pet.name}</Text>
-                  </View>
-                ))
+              ? pets.map((pet, index) => {
+                  const petImg = pet?.imageUrl || pet?.profilePictureUrl;
+                  return (
+                    <View key={pet?.id || index} style={styles.petItem}>
+                      <Image
+                        source={
+                          petImg &&
+                          typeof petImg === "string" &&
+                          petImg.trim().length > 0
+                            ? { uri: petImg }
+                            : defaultPet
+                        }
+                        style={styles.profilePets}
+                        resizeMode="cover"
+                      />
+                      <Text style={styles.namePets}>{pet?.name || "Pet"}</Text>
+                    </View>
+                  );
+                })
               : null}
             {(!hasPets || pets.length < 3) && (
-              <TouchableOpacity style={styles.addPetItem}>
+              <TouchableOpacity
+                style={styles.addPetItem}
+                onPress={() =>
+                  navigation.navigate("AddPet", { userId: userData?.id })
+                }
+              >
                 <View style={styles.addPets}>
                   <FontAwesome6 name="add" size={24} color="#628141" />
                 </View>

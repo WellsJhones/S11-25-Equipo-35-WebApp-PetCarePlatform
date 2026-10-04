@@ -5,6 +5,7 @@ import { View, StyleSheet, Image } from "react-native";
 import HomeScreen from "../Screens/Homee";
 import ProfileUser from "../Screens/Profile/ProfileUser";
 import EditProfile from "../Screens/Profile/EdithProfile";
+import AddPet from "../Screens/Profile/AddPet";
 
 import HomeLog from "../assets/tabs/Home.png";
 import Group from "../assets/tabs/Group.png";
@@ -23,6 +24,7 @@ function ProfileStackScreen() {
     >
       <ProfileStack.Screen name="ProfileMain" component={ProfileUser} />
       <ProfileStack.Screen name="EditProfile" component={EditProfile} />
+      <ProfileStack.Screen name="AddPet" component={AddPet} />
     </ProfileStack.Navigator>
   );
 }

@@ -5,7 +5,7 @@ import { useAuth } from "../Context/AuthContext";
 import { Alert } from "react-native";
 
 export const useCalendarRecord = () => {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const [username, setUsername] = useState();
   const [selectedDate, setSelectedDate] = useState("");
   const [reminders, setReminders] = useState({});
@@ -33,6 +33,12 @@ export const useCalendarRecord = () => {
           const user = await getMyUser(token);
           if (user?.data?.firstName) {
             setUsername(user.data.firstName);
+          } else if (
+            user?.unauthorized ||
+            user?.status === 401 ||
+            user?.status === 403
+          ) {
+            logout();
           }
         } catch (error) {
           console.error("Error fetching user data:", error);

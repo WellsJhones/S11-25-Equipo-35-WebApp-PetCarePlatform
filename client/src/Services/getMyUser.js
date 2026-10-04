@@ -11,5 +11,13 @@ export const getMyUser = async (token) => {
     credentials: "include",
   });
 
-  return response.json();
+  if (response.status === 401 || response.status === 403) {
+    return { success: false, unauthorized: true, status: response.status };
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    return { success: false, status: response.status };
+  }
 };

@@ -3,12 +3,12 @@ import { useNavigation } from "@react-navigation/native";
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { getMyUser } from "../Services/getMyUser";
-import { useToken } from "./useToken";
+import { useAuth } from "../Context/AuthContext";
 
 export const useEdithProfile = () => {
 
   const navigation = useNavigation();
-  const token = useToken();
+  const { token, logout } = useAuth();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -20,6 +20,12 @@ export const useEdithProfile = () => {
           const response = await getMyUser(token);
           if (response?.success && response.data) {
             setUser(response.data);
+          } else if (
+            response?.unauthorized ||
+            response?.status === 401 ||
+            response?.status === 403
+          ) {
+            logout();
           } else {
             throw new Error("Failed to fetch user data");
           }

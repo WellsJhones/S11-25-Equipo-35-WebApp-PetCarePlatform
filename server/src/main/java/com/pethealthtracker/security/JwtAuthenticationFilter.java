@@ -43,30 +43,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-        userEmail = jwtTokenProvider.getUsernameFromJWT(jwt);
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            try {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-                
-                if (jwtTokenProvider.validateToken(jwt) && userDetails instanceof UserPrincipal userPrincipal) {
+        try {
+            if (jwtTokenProvider.validateToken(jwt)) {
+                userEmail = jwtTokenProvider.getUsernameFromJWT(jwt);
+
+                if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
                     
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userPrincipal,
-                            null,
-                            userPrincipal.getAuthorities()
-                    );
-                    
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-                    
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    if (userDetails instanceof UserPrincipal userPrincipal) {
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userPrincipal,
+                                null,
+                                userPrincipal.getAuthorities()
+                        );
+                        
+                        authToken.setDetails(
+                                new WebAuthenticationDetailsSource().buildDetails(request)
+                        );
+                        
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
-            } catch (Exception e) {
-                logger.error("No se pudo establecer la autenticación del usuario: {}", e.getMessage());
             }
+        } catch (Exception e) {
+            logger.error("No se pudo establecer la autenticación del usuario: {}", e.getMessage());
         }
+
         filterChain.doFilter(request, response);
     }
 }
