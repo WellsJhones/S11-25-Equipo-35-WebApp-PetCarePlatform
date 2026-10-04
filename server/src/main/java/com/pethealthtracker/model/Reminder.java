@@ -6,6 +6,7 @@ import java.time.LocalTime;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.hibernate.annotations.ColumnTransformer;
 
 import com.pethealthtracker.model.enums.RecurrencePattern;
 import com.pethealthtracker.model.enums.ReminderType;
@@ -21,9 +22,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 import lombok.*;
-
 
 @Entity
 @Table(name = "reminders")
@@ -35,7 +37,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
 public class Reminder {
-    @Id 
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -74,8 +76,9 @@ public class Reminder {
     @Column(name = "recurrence_pattern")
     private RecurrencePattern recurrencePattern;
 
-    // Columna JSON 
-    @Column(name = "custom_recurrence", columnDefinition = "JSON")
+    // Columna JSON
+    @Column(name = "custom_recurrence", columnDefinition = "json")
+    @ColumnTransformer(write = "?::json")
     private String customRecurrence; // Almacena detalles adicionales para patrones personalizados
 
     @Column(name = "is_completed")
@@ -87,7 +90,6 @@ public class Reminder {
     @Column(name = "notification_sent")
     private Boolean notificationSent;
 
-
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -95,4 +97,28 @@ public class Reminder {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+        if (isCompleted == null) {
+            isCompleted = false;
+        }
+        if (isRecurring == null) {
+            isRecurring = false;
+        }
+        if (notificationSent == null) {
+            notificationSent = false;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

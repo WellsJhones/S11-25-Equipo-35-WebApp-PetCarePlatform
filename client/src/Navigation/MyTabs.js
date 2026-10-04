@@ -6,6 +6,7 @@ import HomeScreen from "../Screens/Homee";
 import ProfileUser from "../Screens/Profile/ProfileUser";
 import EditProfile from "../Screens/Profile/EdithProfile";
 import AddPet from "../Screens/Profile/AddPet";
+import ScheduleScreen from "../Screens/Schedule/ScheduleScreen";
 
 import HomeLog from "../assets/tabs/Home.png";
 import Group from "../assets/tabs/Group.png";
@@ -64,7 +65,7 @@ export default function MyTabs() {
 
       <Tab.Screen
         name="Schedule"
-        component={HomeScreen}
+        component={ScheduleScreen}
         options={{
           tabBarIcon: ({ focused }) => (
             <View

@@ -17,6 +17,7 @@ import { styles } from "../Styles/CalendarRecord";
 
 const CalendarReminderScreen = () => {
   const {
+    pets,
     username,
     selectedDate,
     modalVisible,
@@ -47,9 +48,9 @@ const CalendarReminderScreen = () => {
             backgroundColor: "#ffffff",
             calendarBackground: "#ffffff",
             textSectionTitleColor: "#020202ff",
-            selectedDayBackgroundColor: "#4ae263ff",
+            selectedDayBackgroundColor: "#628141",
             selectedDayTextColor: "#ffffff",
-            todayTextColor: "#000000ff",
+            todayTextColor: "#628141",
             dayTextColor: "#000000ff",
             textDisabledColor: "#d9e1e8",
             monthTextColor: "#383838ff",
@@ -67,10 +68,21 @@ const CalendarReminderScreen = () => {
       </View>
       <View style={styles.remindersContainer}>
         <View style={styles.remindersHeader}>
-          <Text style={styles.remindersTitle}>Today's Reminders</Text>
+          <Text style={styles.remindersTitle}>
+            {selectedDate === getCurrentDate()
+              ? "Today's Reminders"
+              : `Reminders for ${selectedDate}`}
+          </Text>
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => setModalVisible(true)}
+            onPress={() => {
+              setNewReminder((prev) => ({
+                ...prev,
+                date: selectedDate || getCurrentDate(),
+                petId: pets && pets.length > 0 ? String(pets[0].id) : null,
+              }));
+              setModalVisible(true);
+            }}
           >
             <Ionicons name="add" size={24} color="white" />
           </TouchableOpacity>
@@ -99,13 +111,25 @@ const CalendarReminderScreen = () => {
                 </View>
                 <View style={styles.reminderContent}>
                   <Text style={styles.reminderTitle}>{reminder.title}</Text>
+                  {reminder.petName ? (
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: "#628141",
+                        fontWeight: "600",
+                        marginBottom: 2,
+                      }}
+                    >
+                      🐾 {reminder.petName}
+                    </Text>
+                  ) : null}
                   {reminder.medication ? (
                     <Text style={styles.reminderMedication}>
                       {reminder.medication}
                     </Text>
                   ) : null}
                   <Text style={styles.reminderTime}>
-                    {reminder.time} - {reminder.time.substring(0, 2) + ":05H"}
+                    {reminder.time}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -130,11 +154,91 @@ const CalendarReminderScreen = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>add reminder</Text>
+            <Text style={styles.modalTitle}>Add Reminder</Text>
+
+            {/* Date Picker / Field */}
+            <View style={{ marginBottom: 12 }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "600",
+                  color: "#555",
+                  marginBottom: 4,
+                }}
+              >
+                Date (YYYY-MM-DD)
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={newReminder.date || selectedDate}
+                onChangeText={(text) =>
+                  setNewReminder({ ...newReminder, date: text })
+                }
+                placeholder="YYYY-MM-DD"
+              />
+            </View>
+
+            {/* Pet selector (if user has pets) */}
+            {pets && pets.length > 0 && (
+              <View style={{ marginBottom: 12 }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: "#555",
+                    marginBottom: 6,
+                  }}
+                >
+                  Select Pet
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    gap: 6,
+                  }}
+                >
+                  {pets.map((p) => {
+                    const isSelected =
+                      String(newReminder.petId || (pets[0]?.id)) ===
+                      String(p.id);
+                    return (
+                      <TouchableOpacity
+                        key={p.id}
+                        style={{
+                          paddingVertical: 5,
+                          paddingHorizontal: 12,
+                          borderRadius: 14,
+                          borderWidth: 1,
+                          borderColor: isSelected ? "#628141" : "#ddd",
+                          backgroundColor: isSelected ? "#628141" : "#f7f7f6",
+                        }}
+                        onPress={() =>
+                          setNewReminder({
+                            ...newReminder,
+                            petId: String(p.id),
+                          })
+                        }
+                      >
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            fontWeight: "600",
+                            color: isSelected ? "#fff" : "#555",
+                          }}
+                        >
+                          {p.species === "CAT" ? "🐱" : "🐶"} {p.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
 
             <TextInput
               style={styles.input}
-              placeholder="Títle of Reminder"
+              placeholder="Title of Reminder *"
               value={newReminder.title}
               onChangeText={(text) =>
                 setNewReminder({ ...newReminder, title: text })
@@ -143,7 +247,7 @@ const CalendarReminderScreen = () => {
 
             <TextInput
               style={styles.input}
-              placeholder="Medication (optional)"
+              placeholder="Medication / Details (optional)"
               value={newReminder.medication}
               onChangeText={(text) =>
                 setNewReminder({ ...newReminder, medication: text })

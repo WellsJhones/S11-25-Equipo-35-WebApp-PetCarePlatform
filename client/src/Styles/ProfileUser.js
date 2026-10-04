@@ -101,6 +101,21 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 10,
+    minWidth: 96,
+  },
+  petImageContainer: {
+    position: "relative",
+  },
+  petEditBadge: {
+    position: "absolute",
+    right: 0,
+    bottom: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#628141",
+    justifyContent: "center",
+    alignItems: "center",
   },
   addPetItem: {
     alignItems: "center",

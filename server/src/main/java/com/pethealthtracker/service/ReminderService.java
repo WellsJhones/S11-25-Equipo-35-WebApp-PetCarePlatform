@@ -69,6 +69,32 @@ public class ReminderService {
         return pendingReminders.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<ReminderResponseDTO> getAllRemindersByUserId(Long userId) {
+        List<Reminder> reminders = reminderRepository.findByUserId(userId);
+        return reminders.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ReminderResponseDTO toggleCompleted(Long reminderId) {
+        Reminder reminder = reminderRepository.findById(reminderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reminder", "id", reminderId));
+
+        boolean newState = reminder.getIsCompleted() == null || !reminder.getIsCompleted();
+        reminder.setIsCompleted(newState);
+        reminder.setCompletedAt(newState ? LocalDateTime.now() : null);
+
+        return mapToResponseDTO(reminderRepository.save(reminder));
+    }
+
+    @Transactional
+    public void deleteReminder(Long reminderId) {
+        if (!reminderRepository.existsById(reminderId)) {
+            throw new ResourceNotFoundException("Reminder", "id", reminderId);
+        }
+        reminderRepository.deleteById(reminderId);
+    }
+
     private Reminder mapToEntity(ReminderRequestDTO dto, User user, Pet pet) {
         return Reminder.builder()
                 .user(user)
@@ -83,6 +109,8 @@ public class ReminderService {
                 .customRecurrence(dto.getCustomRecurrence())
                 .isCompleted(false)
                 .notificationSent(false)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 
@@ -90,7 +118,8 @@ public class ReminderService {
         return ReminderResponseDTO.builder()
                 .id(reminder.getId())
                 .userId(reminder.getUser().getId())
-                .petId(reminder.getPet().getId())
+                .petId(reminder.getPet() != null ? reminder.getPet().getId() : null)
+                .petName(reminder.getPet() != null ? reminder.getPet().getName() : null)
                 .reminderType(reminder.getReminderType())
                 .title(reminder.getTitle())
                 .description(reminder.getDescription())

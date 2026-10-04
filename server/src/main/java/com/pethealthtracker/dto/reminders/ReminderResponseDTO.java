@@ -4,8 +4,10 @@ import com.pethealthtracker.model.enums.RecurrencePattern;
 import com.pethealthtracker.model.enums.ReminderType;
 
 import jakarta.persistence.Column;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
@@ -18,12 +20,15 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReminderResponseDTO {
 
     // --- Identificación ---
     private Long id;
     private Long userId;
     private Long petId;
+    private String petName;
 
     // --- Campos Principales ---
     private ReminderType reminderType;

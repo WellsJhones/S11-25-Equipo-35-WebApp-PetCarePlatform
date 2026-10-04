@@ -144,20 +144,37 @@ export default function ProfileUser() {
               ? pets.map((pet, index) => {
                   const petImg = pet?.imageUrl || pet?.profilePictureUrl;
                   return (
-                    <View key={pet?.id || index} style={styles.petItem}>
-                      <Image
-                        source={
-                          petImg &&
-                          typeof petImg === "string" &&
-                          petImg.trim().length > 0
-                            ? { uri: petImg }
-                            : defaultPet
-                        }
-                        style={styles.profilePets}
-                        resizeMode="cover"
-                      />
+                    <TouchableOpacity
+                      key={pet?.id || index}
+                      style={styles.petItem}
+                      activeOpacity={0.75}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Edit ${pet?.name || "pet"}`}
+                      onPress={() =>
+                        navigation.navigate("AddPet", {
+                          userId: userData?.id,
+                          pet,
+                        })
+                      }
+                    >
+                      <View style={styles.petImageContainer}>
+                        <Image
+                          source={
+                            petImg &&
+                            typeof petImg === "string" &&
+                            petImg.trim().length > 0
+                              ? { uri: petImg }
+                              : defaultPet
+                          }
+                          style={styles.profilePets}
+                          resizeMode="cover"
+                        />
+                        <View style={styles.petEditBadge}>
+                          <FontAwesome6 name="edit" size={12} color="#fff" />
+                        </View>
+                      </View>
                       <Text style={styles.namePets}>{pet?.name || "Pet"}</Text>
-                    </View>
+                    </TouchableOpacity>
                   );
                 })
               : null}

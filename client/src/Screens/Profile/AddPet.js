@@ -14,7 +14,7 @@ import Toast from "react-native-toast-message";
 
 import Layout from "../../Components/Layout";
 import { useAuth } from "../../Context/AuthContext";
-import { createPet } from "../../Services/createPet";
+import { createPet, updatePet } from "../../Services/createPet";
 import { getMyUser } from "../../Services/getMyUser";
 import { styles } from "../../Styles/AddPet";
 
@@ -35,17 +35,30 @@ const GENDER_OPTIONS = [
 export default function AddPet({ route, navigation }) {
   const { token } = useAuth();
   const [saving, setSaving] = useState(false);
+  const existingPet = route.params?.pet;
+  const isEditing = Boolean(existingPet?.id);
 
   // Form State
-  const [name, setName] = useState("");
-  const [species, setSpecies] = useState("DOG");
-  const [breed, setBreed] = useState("");
-  const [gender, setGender] = useState("MALE");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [weight, setWeight] = useState("");
-  const [weightUnit, setWeightUnit] = useState("KG");
-  const [color, setColor] = useState("");
-  const [healthNotes, setHealthNotes] = useState("");
+  const [name, setName] = useState(existingPet?.name || "");
+  const [species, setSpecies] = useState(existingPet?.species || "DOG");
+  const [breed, setBreed] = useState(existingPet?.breed || "");
+  const [gender, setGender] = useState(
+    existingPet?.gender || (isEditing ? "" : "MALE"),
+  );
+  const [dateOfBirth, setDateOfBirth] = useState(
+    existingPet?.dateOfBirth || "",
+  );
+  const [weight, setWeight] = useState(
+    existingPet?.weight == null ? "" : String(existingPet.weight),
+  );
+  const [weightUnit, setWeightUnit] = useState(existingPet?.weightUnit || "KG");
+  const [color, setColor] = useState(existingPet?.color || "");
+  const [microchipNumber, setMicrochipNumber] = useState(
+    existingPet?.microchipNumber || "",
+  );
+  const [healthNotes, setHealthNotes] = useState(
+    existingPet?.healthNotes || "",
+  );
   const [errors, setErrors] = useState({});
 
   const validate = () => {
@@ -97,15 +110,21 @@ export default function AddPet({ route, navigation }) {
         weight: weight.trim() ? parseFloat(weight.trim()) : null,
         weightUnit: weight.trim() ? weightUnit : null,
         color: color.trim() || null,
+        microchipNumber: microchipNumber.trim() || null,
+        profilePictureUrl: existingPet?.profilePictureUrl || null,
         healthNotes: healthNotes.trim() || null,
       };
 
-      await createPet(token, targetUserId, petPayload);
+      if (isEditing) {
+        await updatePet(token, targetUserId, existingPet.id, petPayload);
+      } else {
+        await createPet(token, targetUserId, petPayload);
+      }
 
       Toast.show({
         type: "success",
-        text1: "Pet Added!",
-        text2: `${name} has been added successfully.`,
+        text1: isEditing ? "Pet Updated!" : "Pet Added!",
+        text2: `${name} has been ${isEditing ? "updated" : "added"} successfully.`,
       });
 
       navigation.goBack();
@@ -136,7 +155,9 @@ export default function AddPet({ route, navigation }) {
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Ionicons name="chevron-back" size={26} color="black" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Add Pet</Text>
+            <Text style={styles.headerTitle}>
+              {isEditing ? "Edit Pet" : "Add Pet"}
+            </Text>
             <View style={{ width: 26 }} />
           </View>
 
@@ -302,6 +323,17 @@ export default function AddPet({ route, navigation }) {
               />
             </View>
 
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Microchip Number</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter microchip number"
+                placeholderTextColor="#999"
+                value={microchipNumber}
+                onChangeText={setMicrochipNumber}
+              />
+            </View>
+
             {/* Health Notes */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Health Notes / Allergies</Text>
@@ -325,7 +357,9 @@ export default function AddPet({ route, navigation }) {
               {saving ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.saveButtonText}>Add Pet</Text>
+                <Text style={styles.saveButtonText}>
+                  {isEditing ? "Save Changes" : "Add Pet"}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
