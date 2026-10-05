@@ -13,17 +13,13 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 
-import Layout from "../../Components/Layout";
-import { useSchedule, CATEGORIES } from "../../Hooks/useSchedule";
-import { styles } from "../../Styles/ScheduleScreen";
+import Layout from "../Components/Layout";
+import { useSchedule, CATEGORIES } from "../Hooks/useSchedule";
+import { styles } from "../Styles/ScheduleScreen";
 
-export default function ScheduleScreen() {
+export default function FeedingScreen() {
   const {
     pets,
-    selectedPetFilter,
-    setSelectedPetFilter,
-    statusFilter,
-    setStatusFilter,
     modalVisible,
     setModalVisible,
     formPetId,
@@ -42,20 +38,33 @@ export default function ScheduleScreen() {
     handleAddEvent,
     toggleComplete,
     deleteEvent,
-    openCreateModal,
     openEditModal,
-    editingReminderId,
+    getTodayDate,
   } = useSchedule();
+
+  const feedingEvents = filteredEvents.filter((ev) => ev.type === "FEEDING");
 
   const getCategoryConfig = (type) => {
     return (
       CATEGORIES.find((c) => c.id === type) || {
-        id: "OTHER",
-        label: "Activity",
-        icon: "event",
-        color: "#628141",
+        id: "FEEDING",
+        label: "Feeding",
+        icon: "restaurant",
+        color: "#D35400",
       }
     );
+  };
+
+  const openFeedingModal = () => {
+    setFormType("FEEDING");
+    setFormDate(getTodayDate());
+    setFormTitle("");
+    setFormNotes("");
+    setFormTime("09:00");
+    if (pets.length > 0) {
+      setFormPetId(String(pets[0].id));
+    }
+    setModalVisible(true);
   };
 
   return (
@@ -65,123 +74,35 @@ export default function ScheduleScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>Schedule</Text>
-            <Text style={styles.headerSubtitle}>
-              Routines, health visits & reminders
-            </Text>
+            <Text style={styles.headerTitle}>Feeding</Text>
+            <Text style={styles.headerSubtitle}>Meal and food reminders</Text>
           </View>
           <TouchableOpacity
             style={styles.addEventButton}
-            onPress={() => openCreateModal()}
+            onPress={openFeedingModal}
           >
             <Ionicons name="add" size={18} color="#fff" />
             <Text style={styles.addEventButtonText}>New</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Pet Filter Pills */}
-        <View style={styles.petFilterContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity
-              style={[
-                styles.petChip,
-                selectedPetFilter === "ALL" && styles.petChipActive,
-              ]}
-              onPress={() => setSelectedPetFilter("ALL")}
-            >
-              <Text
-                style={[
-                  styles.petChipText,
-                  selectedPetFilter === "ALL" && styles.petChipTextActive,
-                ]}
-              >
-                🐾 All Pets
-              </Text>
-            </TouchableOpacity>
-
-            {pets.map((pet) => {
-              const isSelected = String(selectedPetFilter) === String(pet.id);
-              const petEmoji = pet.species === "CAT" ? "🐱" : "🐶";
-              return (
-                <TouchableOpacity
-                  key={pet.id}
-                  style={[styles.petChip, isSelected && styles.petChipActive]}
-                  onPress={() => setSelectedPetFilter(String(pet.id))}
-                >
-                  <Text
-                    style={[
-                      styles.petChipText,
-                      isSelected && styles.petChipTextActive,
-                    ]}
-                  >
-                    {petEmoji} {pet.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        {/* Status Segmented Tabs */}
-        <View style={styles.statusTabs}>
-          {[
-            { id: "UPCOMING", label: "Upcoming" },
-            { id: "COMPLETED", label: "Completed" },
-            { id: "ALL", label: "All" },
-          ].map((tab) => {
-            const isActive = statusFilter === tab.id;
-            return (
-              <TouchableOpacity
-                key={tab.id}
-                style={[styles.statusTab, isActive && styles.statusTabActive]}
-                onPress={() => setStatusFilter(tab.id)}
-              >
-                <Text
-                  style={[
-                    styles.statusTabText,
-                    isActive && styles.statusTabTextActive,
-                  ]}
-                >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Schedule List */}
-        {filteredEvents.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <MaterialIcons name="event-note" size={54} color="#ea9b56" />
-            <Text style={styles.emptyTitle}>No activities found</Text>
-            <Text style={styles.emptySubtitle}>
-              {statusFilter === "COMPLETED"
-                ? "No completed activities in this filter."
-                : "Keep your pets healthy and happy by scheduling visits, feeding, or meds!"}
+        {feedingEvents.length === 0 ? (
+          <View style={{ paddingVertical: 40, alignItems: "center" }}>
+            <MaterialIcons name="restaurant" size={42} color="#ea9b56" />
+            <Text style={{ marginTop: 12, color: "#666", fontSize: 16 }}>
+              No feeding reminders yet
             </Text>
-            {statusFilter !== "COMPLETED" && (
-              <TouchableOpacity
-                style={styles.createEmptyButton}
-                onPress={() => openCreateModal()}
-              >
-                <Text style={styles.createEmptyButtonText}>
-                  + Schedule an Activity
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
         ) : (
-          filteredEvents.map((ev) => {
+          feedingEvents.map((ev) => {
             const cat = getCategoryConfig(ev.type);
             return (
               <View
                 key={`${ev.date}-${ev.id}`}
                 style={[styles.card, ev.isCompleted && styles.cardCompleted]}
               >
-                {/* Card Header: Category & Time */}
                 <View style={styles.cardHeader}>
                   <View style={styles.categoryBadge}>
                     <View
@@ -205,7 +126,6 @@ export default function ScheduleScreen() {
                   </View>
                 </View>
 
-                {/* Card Body: Title & Notes */}
                 <View style={styles.cardBody}>
                   <Text
                     style={[
@@ -220,7 +140,6 @@ export default function ScheduleScreen() {
                   ) : null}
                 </View>
 
-                {/* Card Footer: Pet Tag & Actions */}
                 <View style={styles.cardFooter}>
                   <View style={styles.petTag}>
                     <Text style={styles.petTagText}>🐾 {ev.petName}</Text>
@@ -251,16 +170,12 @@ export default function ScheduleScreen() {
                       </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                      onPress={() => openEditModal(ev)}
-                      style={{ padding: 4 }}
-                    >
+                    <TouchableOpacity onPress={() => openEditModal(ev)}>
                       <MaterialIcons name="edit" size={18} color="#ea9b56" />
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       onPress={() => deleteEvent(ev.date, ev.id)}
-                      style={{ padding: 4 }}
                     >
                       <AntDesign name="delete" size={18} color="#e74c3c" />
                     </TouchableOpacity>
@@ -272,7 +187,6 @@ export default function ScheduleScreen() {
         )}
       </ScrollView>
 
-      {/* Add Activity Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -285,36 +199,16 @@ export default function ScheduleScreen() {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {editingReminderId ? "Edit Activity" : "Schedule Activity"}
-              </Text>
+              <Text style={styles.modalTitle}>Feeding Reminder</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Pet Picker */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Select Pet</Text>
                 <View style={styles.categoryGrid}>
-                  <TouchableOpacity
-                    style={[
-                      styles.categoryItem,
-                      formPetId === "ALL" && styles.categoryItemActive,
-                    ]}
-                    onPress={() => setFormPetId("ALL")}
-                  >
-                    <Text
-                      style={[
-                        styles.categoryItemText,
-                        formPetId === "ALL" && styles.categoryItemTextActive,
-                      ]}
-                    >
-                      🐾 All Pets
-                    </Text>
-                  </TouchableOpacity>
-
                   {pets.map((p) => {
                     const isSelected = String(formPetId) === String(p.id);
                     return (
@@ -340,53 +234,17 @@ export default function ScheduleScreen() {
                 </View>
               </View>
 
-              {/* Category Picker */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Activity Type</Text>
-                <View style={styles.categoryGrid}>
-                  {CATEGORIES.map((cat) => {
-                    const isSelected = formType === cat.id;
-                    return (
-                      <TouchableOpacity
-                        key={cat.id}
-                        style={[
-                          styles.categoryItem,
-                          isSelected && styles.categoryItemActive,
-                        ]}
-                        onPress={() => setFormType(cat.id)}
-                      >
-                        <MaterialIcons
-                          name={cat.icon}
-                          size={16}
-                          color={isSelected ? "#628141" : cat.color}
-                        />
-                        <Text
-                          style={[
-                            styles.categoryItemText,
-                            isSelected && styles.categoryItemTextActive,
-                          ]}
-                        >
-                          {cat.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
-              {/* Title */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Activity Title *</Text>
+                <Text style={styles.label}>Meal Title *</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Annual Rabies Vaccine, Heartworm Pill"
+                  placeholder="e.g. Breakfast, Dinner, Wet food"
                   placeholderTextColor="#999"
                   value={formTitle}
                   onChangeText={setFormTitle}
                 />
               </View>
 
-              {/* Date & Time */}
               <View style={styles.rowInputs}>
                 <View style={[styles.inputGroup, styles.flexHalf]}>
                   <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
@@ -410,15 +268,14 @@ export default function ScheduleScreen() {
                 </View>
               </View>
 
-              {/* Notes */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Notes / Instructions</Text>
+                <Text style={styles.label}>Notes</Text>
                 <TextInput
                   style={[
                     styles.input,
                     { height: 60, textAlignVertical: "top" },
                   ]}
-                  placeholder="e.g. Bring vaccination booklet, administer after food"
+                  placeholder="e.g. Feed after walk, dry food only"
                   placeholderTextColor="#999"
                   multiline
                   numberOfLines={2}
@@ -427,7 +284,6 @@ export default function ScheduleScreen() {
                 />
               </View>
 
-              {/* Actions */}
               <View style={styles.modalActions}>
                 <TouchableOpacity
                   style={styles.cancelBtn}
@@ -440,9 +296,7 @@ export default function ScheduleScreen() {
                   style={styles.submitBtn}
                   onPress={handleAddEvent}
                 >
-                  <Text style={styles.submitBtnText}>
-                    {editingReminderId ? "Update Schedule" : "Save Schedule"}
-                  </Text>
+                  <Text style={styles.submitBtnText}>Save Feeding</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>

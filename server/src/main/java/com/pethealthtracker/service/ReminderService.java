@@ -17,7 +17,6 @@ import com.pethealthtracker.repository.PetRepository;
 import com.pethealthtracker.repository.ReminderRepository;
 import com.pethealthtracker.repository.UserRepository;
 
-
 @Service
 public class ReminderService {
 
@@ -36,11 +35,11 @@ public class ReminderService {
     public ReminderResponseDTO createReminder(ReminderRequestDTO requestDTO) {
         // 1. Validar existencias
         User user = userRepository.findById(requestDTO.getUserId())
-            .orElseThrow(() -> new ResourceNotFoundException("User", "id", requestDTO.getUserId()));
-    
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", requestDTO.getUserId()));
+
         Pet pet = petRepository.findById(requestDTO.getPetId())
-            .orElseThrow(() -> new ResourceNotFoundException("Pet", "id", requestDTO.getPetId()));
-    
+                .orElseThrow(() -> new ResourceNotFoundException("Pet", "id", requestDTO.getPetId()));
+
         // Mapear DTO a Entidad
         Reminder reminder = mapToEntity(requestDTO, user, pet);
 
@@ -52,8 +51,9 @@ public class ReminderService {
 
     @Transactional
     public ReminderResponseDTO markAsCompleted(Long reminderId) {
-        Reminder reminder = reminderRepository.findById(reminderId).orElseThrow(() -> new ResourceNotFoundException("Reminder", "id", reminderId));
-        
+        Reminder reminder = reminderRepository.findById(reminderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reminder", "id", reminderId));
+
         // Logica de negocio: Marcar como completado y registrar el tiempo
         reminder.setIsCompleted(true);
         reminder.setCompletedAt(LocalDateTime.now()); // **CORRECCIÓN 1: Cambia LocalDate.now() a LocalDateTime.now()**
@@ -83,6 +83,32 @@ public class ReminderService {
         boolean newState = reminder.getIsCompleted() == null || !reminder.getIsCompleted();
         reminder.setIsCompleted(newState);
         reminder.setCompletedAt(newState ? LocalDateTime.now() : null);
+
+        return mapToResponseDTO(reminderRepository.save(reminder));
+    }
+
+    @Transactional
+    public ReminderResponseDTO updateReminder(Long reminderId, ReminderRequestDTO requestDTO) {
+        Reminder reminder = reminderRepository.findById(reminderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reminder", "id", reminderId));
+
+        User user = userRepository.findById(requestDTO.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", requestDTO.getUserId()));
+
+        Pet pet = petRepository.findById(requestDTO.getPetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pet", "id", requestDTO.getPetId()));
+
+        reminder.setUser(user);
+        reminder.setPet(pet);
+        reminder.setReminderType(requestDTO.getReminderType());
+        reminder.setTitle(requestDTO.getTitle());
+        reminder.setDescription(requestDTO.getDescription());
+        reminder.setDueDate(requestDTO.getDueDate());
+        reminder.setDueTime(requestDTO.getDueTime());
+        reminder.setIsRecurring(requestDTO.getIsRecurring() != null ? requestDTO.getIsRecurring() : false);
+        reminder.setRecurrencePattern(requestDTO.getRecurrencePattern());
+        reminder.setCustomRecurrence(requestDTO.getCustomRecurrence());
+        reminder.setUpdatedAt(LocalDateTime.now());
 
         return mapToResponseDTO(reminderRepository.save(reminder));
     }

@@ -1,6 +1,6 @@
-import { StyleSheet,Platform } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
- export const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -75,12 +75,12 @@ import { StyleSheet,Platform } from "react-native";
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 50,
+    paddingVertical: 30,
   },
   noRemindersText: {
-    marginTop: 10,
     color: "#999",
-    fontSize: 16,
+    fontSize: 15,
+    textAlign: "center",
   },
   reminderItem: {
     flexDirection: "row",

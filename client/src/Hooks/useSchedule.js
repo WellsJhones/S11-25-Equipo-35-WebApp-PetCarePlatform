@@ -9,16 +9,27 @@ import { getPetsUser } from "../Services/getPetsUser";
 import {
   getUserReminders,
   createReminder,
+  updateReminder,
   toggleReminderComplete,
   deleteReminder,
 } from "../Services/reminderService";
 
 export const CATEGORIES = [
   { id: "VET", label: "Vet Visit", icon: "medical-services", color: "#E74C3C" },
-  { id: "MEDICATION", label: "Medication", icon: "medication", color: "#8E44AD" },
+  {
+    id: "MEDICATION",
+    label: "Medication",
+    icon: "medication",
+    color: "#8E44AD",
+  },
   { id: "VACCINE", label: "Vaccine", icon: "vaccines", color: "#2980B9" },
   { id: "FEEDING", label: "Feeding", icon: "restaurant", color: "#D35400" },
-  { id: "WALK", label: "Walk / Exercise", icon: "directions-walk", color: "#27AE60" },
+  {
+    id: "WALK",
+    label: "Walk / Exercise",
+    icon: "directions-walk",
+    color: "#27AE60",
+  },
   { id: "GROOMING", label: "Grooming", icon: "content-cut", color: "#16A085" },
   { id: "OTHER", label: "Other", icon: "event", color: "#628141" },
 ];
@@ -53,6 +64,8 @@ export const useSchedule = () => {
   const [reminders, setReminders] = useState({});
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editingReminderId, setEditingReminderId] = useState(null);
+  const [editingReminderDate, setEditingReminderDate] = useState(null);
 
   // New Event Form State
   const [formPetId, setFormPetId] = useState("");
@@ -109,11 +122,17 @@ export const useSchedule = () => {
               });
 
               setReminders(reminderMap);
-              await AsyncStorage.setItem("reminders", JSON.stringify(reminderMap));
+              await AsyncStorage.setItem(
+                "reminders",
+                JSON.stringify(reminderMap),
+              );
               return;
             }
           } catch (dbErr) {
-            console.log("Could not load from DB, falling back to local storage:", dbErr);
+            console.log(
+              "Could not load from DB, falling back to local storage:",
+              dbErr,
+            );
           }
         }
       }
@@ -133,7 +152,7 @@ export const useSchedule = () => {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [token])
+    }, [token]),
   );
 
   const saveRemindersToStorage = async (updated) => {
@@ -142,6 +161,17 @@ export const useSchedule = () => {
       setReminders(updated);
     } catch (error) {
       console.log("Error saving reminders:", error);
+    }
+  };
+
+  const resetForm = (presetDate = getTodayDate()) => {
+    setFormTitle("");
+    setFormNotes("");
+    setFormTime("09:00");
+    setFormDate(presetDate);
+    setFormType("VET");
+    if (pets.length > 0) {
+      setFormPetId(String(pets[0].id));
     }
   };
 
@@ -170,8 +200,8 @@ export const useSchedule = () => {
       formPetId && formPetId !== "ALL"
         ? formPetId
         : pets.length > 0
-        ? pets[0].id
-        : null;
+          ? pets[0].id
+          : null;
 
     let petName = "All Pets";
     if (targetPetId) {
@@ -179,12 +209,17 @@ export const useSchedule = () => {
       if (found) petName = found.name;
     }
 
+    const isEditing = !!editingReminderId;
+    const originalDate = editingReminderDate;
+
     // 1. Save to Database
-    let createdDbItem = null;
+    let savedDbItem = null;
     if (currentUserId && targetPetId) {
       try {
         const timeWithSeconds =
-          formTime.trim().length === 5 ? `${formTime.trim()}:00` : formTime.trim();
+          formTime.trim().length === 5
+            ? `${formTime.trim()}:00`
+            : formTime.trim();
 
         const requestPayload = {
           userId: currentUserId,
@@ -197,17 +232,52 @@ export const useSchedule = () => {
           isRecurring: false,
         };
 
-        createdDbItem = await createReminder(token, requestPayload);
+        if (isEditing && editingReminderId) {
+          const reminderId = Number(editingReminderId);
+          if (!Number.isNaN(reminderId)) {
+            savedDbItem = await updateReminder(
+              token,
+              reminderId,
+              requestPayload,
+            );
+          }
+        } else {
+          savedDbItem = await createReminder(token, requestPayload);
+        }
       } catch (err) {
         console.log("Failed to save reminder in DB, persisting locally:", err);
       }
     }
 
     // 2. Update local state & AsyncStorage
-    const eventId = createdDbItem ? String(createdDbItem.id) : Date.now().toString();
-    const newEvent = {
+    const updated = { ...reminders };
+    const eventId = isEditing
+      ? String(editingReminderId)
+      : savedDbItem
+        ? String(savedDbItem.id)
+        : Date.now().toString();
+
+    if (isEditing && originalDate && originalDate !== eventDate) {
+      if (updated[originalDate]) {
+        updated[originalDate] = updated[originalDate].filter(
+          (item) => String(item.id) !== String(editingReminderId),
+        );
+        if (updated[originalDate].length === 0) {
+          delete updated[originalDate];
+        }
+      }
+    } else if (isEditing && originalDate) {
+      updated[originalDate] = (updated[originalDate] || []).filter(
+        (item) => String(item.id) !== String(editingReminderId),
+      );
+      if (updated[originalDate].length === 0) {
+        delete updated[originalDate];
+      }
+    }
+
+    const nextEvent = {
       id: eventId,
-      dbId: createdDbItem?.id || null,
+      dbId: savedDbItem?.id ?? (isEditing ? editingReminderId : null),
       title: formTitle.trim(),
       type: formType,
       petId: targetPetId ? String(targetPetId) : "ALL",
@@ -215,29 +285,34 @@ export const useSchedule = () => {
       date: eventDate,
       time: formTime.trim() || "09:00",
       notes: formNotes.trim() || "",
-      isCompleted: false,
-      createdAt: new Date().toISOString(),
+      isCompleted: isEditing
+        ? (reminders[originalDate]?.find(
+            (item) => String(item.id) === String(editingReminderId),
+          )?.isCompleted ?? false)
+        : false,
+      createdAt: isEditing
+        ? (reminders[originalDate]?.find(
+            (item) => String(item.id) === String(editingReminderId),
+          )?.createdAt ?? new Date().toISOString())
+        : new Date().toISOString(),
     };
 
-    const updated = { ...reminders };
     if (!updated[eventDate]) {
       updated[eventDate] = [];
     }
-    updated[eventDate].push(newEvent);
+    updated[eventDate].push(nextEvent);
 
     await saveRemindersToStorage(updated);
 
     Toast.show({
       type: "success",
-      text1: "Saved to Database!",
-      text2: `${formTitle} scheduled for ${eventDate}.`,
+      text1: isEditing ? "Schedule Updated" : "Saved to Database!",
+      text2: `${formTitle.trim()} scheduled for ${eventDate}.`,
     });
 
-    // Reset Form
-    setFormTitle("");
-    setFormNotes("");
-    setFormTime("09:00");
-    setFormDate(getTodayDate());
+    setEditingReminderId(null);
+    setEditingReminderDate(null);
+    resetForm();
     setModalVisible(false);
   };
 
@@ -318,10 +393,28 @@ export const useSchedule = () => {
   };
 
   const openCreateModal = (presetDate = null) => {
+    setEditingReminderId(null);
+    setEditingReminderDate(null);
+    setFormType("VET");
     setFormDate(presetDate || getTodayDate());
-    if (pets.length > 0 && !formPetId) {
+    if (pets.length > 0) {
       setFormPetId(String(pets[0].id));
     }
+    setFormTitle("");
+    setFormNotes("");
+    setFormTime("09:00");
+    setModalVisible(true);
+  };
+
+  const openEditModal = (event) => {
+    setEditingReminderId(event.dbId ?? event.id);
+    setEditingReminderDate(event.date);
+    setFormPetId(String(event.petId || pets[0]?.id || "ALL"));
+    setFormType(event.type || "VET");
+    setFormTitle(event.title || "");
+    setFormDate(event.date || getTodayDate());
+    setFormTime(event.time || "09:00");
+    setFormNotes(event.notes || "");
     setModalVisible(true);
   };
 
@@ -351,6 +444,8 @@ export const useSchedule = () => {
     toggleComplete,
     deleteEvent,
     openCreateModal,
+    openEditModal,
+    editingReminderId,
     getTodayDate,
   };
 };

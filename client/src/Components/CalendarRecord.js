@@ -90,7 +90,6 @@ const CalendarReminderScreen = () => {
         <ScrollView style={styles.remindersList}>
           {getRemindersForSelectedDate().length === 0 ? (
             <View style={styles.noReminders}>
-              <Icon name="notifications" size={50} color="#ccc" />
               <Text style={styles.noRemindersText}>
                 There are no reminders for this date
               </Text>
@@ -128,9 +127,7 @@ const CalendarReminderScreen = () => {
                       {reminder.medication}
                     </Text>
                   ) : null}
-                  <Text style={styles.reminderTime}>
-                    {reminder.time}
-                  </Text>
+                  <Text style={styles.reminderTime}>{reminder.time}</Text>
                 </View>
                 <TouchableOpacity
                   onPress={() =>
@@ -200,8 +197,7 @@ const CalendarReminderScreen = () => {
                 >
                   {pets.map((p) => {
                     const isSelected =
-                      String(newReminder.petId || (pets[0]?.id)) ===
-                      String(p.id);
+                      String(newReminder.petId || pets[0]?.id) === String(p.id);
                     return (
                       <TouchableOpacity
                         key={p.id}

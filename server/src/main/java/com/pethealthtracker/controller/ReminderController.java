@@ -49,6 +49,19 @@ public class ReminderController {
                 .build());
     }
 
+    @Operation(summary = "Actualizar un recordatorio existente")
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<ReminderResponseDTO>> updateReminder(
+            @PathVariable Long id,
+            @Valid @RequestBody ReminderRequestDTO requestDTO) {
+        ReminderResponseDTO updated = reminderService.updateReminder(id, requestDTO);
+        return ResponseEntity.ok(ApiResponse.<ReminderResponseDTO>builder()
+                .success(true)
+                .message("Recordatorio actualizado exitosamente")
+                .data(updated)
+                .build());
+    }
+
     @Operation(summary = "Alternar estado completado del recordatorio")
     @PatchMapping("/{id}/toggle-complete")
     public ResponseEntity<ApiResponse<ReminderResponseDTO>> toggleCompleted(
