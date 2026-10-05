@@ -44,12 +44,16 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto updateUser(UserDto userDto) {
         User existingUser = getCurrentAuthenticatedUser();
-        
-        // Update fields that are allowed to be updated
+
         existingUser.setFirstName(userDto.getFirstName());
         existingUser.setLastName(userDto.getLastName());
         existingUser.setPhone(userDto.getPhone());
-        
+
+        if (userDto.getProfilePictureUrl() != null) {
+            String profilePictureUrl = userDto.getProfilePictureUrl().trim();
+            existingUser.setProfilePictureUrl(profilePictureUrl.isEmpty() ? null : profilePictureUrl);
+        }
+
         User updatedUser = userRepository.save(existingUser);
         return userMapper.toDto(updatedUser);
     }
@@ -85,11 +89,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void changePassword(String currentPassword, String newPassword) {
         User user = getCurrentAuthenticatedUser();
-        
+
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
-        
+
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
@@ -98,14 +102,18 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void updateProfilePicture(String imageUrl) {
         User user = getCurrentAuthenticatedUser();
-        user.setProfilePictureUrl(imageUrl);
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            user.setProfilePictureUrl(null);
+        } else {
+            user.setProfilePictureUrl(imageUrl.trim());
+        }
         userRepository.save(user);
     }
 
     private User getCurrentAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        
+
         return userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userPrincipal.getId()));
     }

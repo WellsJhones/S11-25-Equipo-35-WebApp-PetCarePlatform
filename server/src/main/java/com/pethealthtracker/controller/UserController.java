@@ -19,7 +19,8 @@ import java.util.List;
 
 /**
  * Controlador para gestionar las operaciones de usuario.
- * Permite a los usuarios autenticados gestionar su perfil y a los administradores gestionar todos los usuarios.
+ * Permite a los usuarios autenticados gestionar su perfil y a los
+ * administradores gestionar todos los usuarios.
  */
 @Tag(name = "Usuarios (users)", description = "API para la gestión de usuarios")
 @RestController
@@ -28,85 +29,94 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
-    private final UserService userService;
+        private final UserService userService;
 
-    @Operation(summary = "Obtiene el perfil del usuario actual")
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserDto>> getCurrentUser() {
-        UserDto user = userService.getCurrentUser();
-        return ResponseEntity.ok(ApiResponse.<UserDto>builder()
-                .success(true)
-                .data(user)
-                .build());
-    }
+        @Operation(summary = "Obtiene el perfil del usuario actual")
+        @GetMapping("/me")
+        public ResponseEntity<ApiResponse<UserDto>> getCurrentUser() {
+                UserDto user = userService.getCurrentUser();
+                return ResponseEntity.ok(ApiResponse.<UserDto>builder()
+                                .success(true)
+                                .data(user)
+                                .build());
+        }
 
-    @Operation(summary = "Actualiza el perfil del usuario actual")
-    @PutMapping("/me")
-    public ResponseEntity<ApiResponse<UserDto>> updateUserProfile(
-            @Valid @RequestBody UserDto userDto) {
-        UserDto updatedUser = userService.updateUser(userDto);
-        return ResponseEntity.ok(ApiResponse.<UserDto>builder()
-                .success(true)
-                .message("Perfil actualizado correctamente")
-                .data(updatedUser)
-                .build());
-    }
+        @Operation(summary = "Actualiza el perfil del usuario actual")
+        @PutMapping("/me")
+        public ResponseEntity<ApiResponse<UserDto>> updateUserProfile(
+                        @Valid @RequestBody UserDto userDto) {
+                UserDto updatedUser = userService.updateUser(userDto);
+                return ResponseEntity.ok(ApiResponse.<UserDto>builder()
+                                .success(true)
+                                .message("Perfil actualizado correctamente")
+                                .data(updatedUser)
+                                .build());
+        }
 
-    @Operation(summary = "Elimina el usuario actual")
-    @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse<Void>> deleteUser() {
-        userService.deleteUser();
-        return ResponseEntity.ok(ApiResponse.<Void>builder()
-                .success(true)
-                .message("Usuario eliminado correctamente")
-                .build());
-    }
+        @Operation(summary = "Elimina el usuario actual")
+        @DeleteMapping("/me")
+        public ResponseEntity<ApiResponse<Void>> deleteUser() {
+                userService.deleteUser();
+                return ResponseEntity.ok(ApiResponse.<Void>builder()
+                                .success(true)
+                                .message("Usuario eliminado correctamente")
+                                .build());
+        }
 
-    @Operation(summary = "Obtiene todos los usuarios (solo administradores)")
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
-        List<UserDto> users = userService.getAllUsers();
-        return ResponseEntity.ok(ApiResponse.<List<UserDto>>builder()
-                .success(true)
-                .data(users)
-                .build());
-    }
+        @Operation(summary = "Obtiene todos los usuarios (solo administradores)")
+        @GetMapping
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
+                List<UserDto> users = userService.getAllUsers();
+                return ResponseEntity.ok(ApiResponse.<List<UserDto>>builder()
+                                .success(true)
+                                .data(users)
+                                .build());
+        }
 
-    @Operation(summary = "Obtiene un usuario por ID (solo administradores)")
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable Long id) {
-        UserDto user = userService.getUserById(id);
-        return ResponseEntity.ok(ApiResponse.<UserDto>builder()
-                .success(true)
-                .data(user)
-                .build());
-    }
+        @Operation(summary = "Obtiene un usuario por ID (solo administradores)")
+        @GetMapping("/{id}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable Long id) {
+                UserDto user = userService.getUserById(id);
+                return ResponseEntity.ok(ApiResponse.<UserDto>builder()
+                                .success(true)
+                                .data(user)
+                                .build());
+        }
 
-    @Operation(summary = "Cambia la contraseña del usuario actual")
-    @PostMapping("/change-password")
-    public ResponseEntity<ApiResponse<Void>> changePassword(
-            @RequestParam String currentPassword,
-            @RequestParam String newPassword) {
-        userService.changePassword(currentPassword, newPassword);
-        return ResponseEntity.ok(ApiResponse.<Void>builder()
-                .success(true)
-                .message("Contraseña actualizada correctamente")
-                .build());
-    }
+        @Operation(summary = "Cambia la contraseña del usuario actual")
+        @PostMapping("/change-password")
+        public ResponseEntity<ApiResponse<Void>> changePassword(
+                        @RequestParam String currentPassword,
+                        @RequestParam String newPassword) {
+                userService.changePassword(currentPassword, newPassword);
+                return ResponseEntity.ok(ApiResponse.<Void>builder()
+                                .success(true)
+                                .message("Contraseña actualizada correctamente")
+                                .build());
+        }
 
-    @Operation(summary = "Sube una imagen de perfil")
-    @PostMapping(value = "/me/picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<String>> uploadProfilePicture(
-            @RequestParam MultipartFile file) throws IOException {
-        // En producción, implementar subida a un servicio como AWS S3
-        String imageUrl = "https://example.com/profile-pictures/" + file.getOriginalFilename();
-        userService.updateProfilePicture(imageUrl);
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .success(true)
-                .message("Imagen de perfil actualizada correctamente")
-                .data(imageUrl)
-                .build());
-    }
+        @Operation(summary = "Sube una imagen de perfil")
+        @PostMapping(value = "/me/picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ResponseEntity<ApiResponse<String>> uploadProfilePicture(
+                        @RequestParam(required = false) MultipartFile file,
+                        @RequestParam(required = false) String imageUrl) throws IOException {
+
+                String finalImageUrl = imageUrl;
+                if (file != null && !file.isEmpty()) {
+                        finalImageUrl = "https://example.com/profile-pictures/" + file.getOriginalFilename();
+                }
+
+                if (finalImageUrl == null || finalImageUrl.isBlank()) {
+                        throw new IllegalArgumentException("Debe enviar una URL válida o una imagen.");
+                }
+
+                userService.updateProfilePicture(finalImageUrl);
+                return ResponseEntity.ok(ApiResponse.<String>builder()
+                                .success(true)
+                                .message("Imagen de perfil actualizada correctamente")
+                                .data(finalImageUrl)
+                                .build());
+        }
 }

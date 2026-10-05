@@ -4,9 +4,29 @@ import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { getMyUser } from "../Services/getMyUser";
 import { useAuth } from "../Context/AuthContext";
+import { apiUrl } from "../Api/apiUrl";
+
+const updateUserProfile = async (token, payload) => {
+  const response = await fetch(`${apiUrl}/users/me`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({ success: false }));
+
+  if (!response.ok) {
+    throw data;
+  }
+
+  return data;
+};
 
 export const useEdithProfile = () => {
-
   const navigation = useNavigation();
   const { token, logout } = useAuth();
   const [user, setUser] = useState(null);
@@ -58,15 +78,32 @@ export const useEdithProfile = () => {
         lastName: user.lastName || "",
         email: user.email || "",
         phone: user.phone || "",
+        profilePictureUrl: user.profilePictureUrl || "",
       });
     }
-  }, [user]);
+  }, [user, reset]);
 
   const onSubmit = async (data) => {
     try {
       setSaving(true);
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const payload = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone || null,
+        profilePictureUrl:
+          data.profilePictureUrl && data.profilePictureUrl.trim().length > 0
+            ? data.profilePictureUrl.trim()
+            : null,
+      };
+
+      const response = await updateUserProfile(token, payload);
+
+      if (response?.success && response.data) {
+        setUser(response.data);
+      }
+
       Toast.show({
         type: "success",
         text1: "Profile Updated",
@@ -79,7 +116,7 @@ export const useEdithProfile = () => {
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "An error occurred while saving your profile",
+        text2: error?.message || "An error occurred while saving your profile",
       });
     } finally {
       setSaving(false);
@@ -95,6 +132,6 @@ export const useEdithProfile = () => {
     saving,
     onSubmit,
     Controller,
-    navigation
+    navigation,
   };
 };

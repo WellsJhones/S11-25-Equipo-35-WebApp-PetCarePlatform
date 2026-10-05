@@ -16,7 +16,6 @@ import { styles } from "../../Styles/EdithProfile";
 import { useEdithProfile } from "../../Hooks/useEdithProfile";
 
 export default function EditProfile() {
-
   const {
     control,
     handleSubmit,
@@ -26,8 +25,8 @@ export default function EditProfile() {
     saving,
     onSubmit,
     Controller,
-    navigation,}
-    = useEdithProfile();
+    navigation,
+  } = useEdithProfile();
 
   if (loading) {
     return (
@@ -69,6 +68,30 @@ export default function EditProfile() {
         </View>
         {user ? (
           <View style={styles.formContainer}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Profile image URL</Text>
+              <View style={styles.inputContainer}>
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={[
+                        styles.input,
+                        errors.profilePictureUrl && styles.inputError,
+                      ]}
+                      placeholder="Add profile image URL"
+                      placeholderTextColor="#999"
+                      autoCapitalize="none"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                    />
+                  )}
+                  name="profilePictureUrl"
+                  defaultValue={user.profilePictureUrl || ""}
+                />
+              </View>
+            </View>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>First Name</Text>
               <View style={styles.inputContainer}>
@@ -219,4 +242,3 @@ export default function EditProfile() {
     </Layout>
   );
 }
-
