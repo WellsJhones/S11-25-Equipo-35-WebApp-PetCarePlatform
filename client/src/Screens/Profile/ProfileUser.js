@@ -158,17 +158,21 @@ export default function ProfileUser() {
                       }
                     >
                       <View style={styles.petImageContainer}>
-                        <Image
-                          source={
-                            petImg &&
-                            typeof petImg === "string" &&
-                            petImg.trim().length > 0
-                              ? { uri: petImg }
-                              : defaultPet
-                          }
-                          style={styles.profilePets}
-                          resizeMode="cover"
-                        />
+                        {petImg &&
+                        typeof petImg === "string" &&
+                        petImg.trim().length > 0 ? (
+                          <Image
+                            source={{ uri: petImg }}
+                            style={styles.profilePets}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <Image
+                            source={defaultPet}
+                            style={styles.profilePets}
+                            resizeMode="cover"
+                          />
+                        )}
                         <View style={styles.petEditBadge}>
                           <FontAwesome6 name="edit" size={12} color="#fff" />
                         </View>

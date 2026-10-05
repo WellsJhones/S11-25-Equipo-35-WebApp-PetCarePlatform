@@ -7,7 +7,9 @@ import { AuthProvider } from "./src/Context/AuthContext";
 export default function App() {
   return (
     <AuthProvider>
-      <NavigationContainer>
+      <NavigationContainer
+        documentTitle={{ formatter: () => "PetCare Platform" }}
+      >
         <RootStack />
       </NavigationContainer>
       <Toast config={toastConfig} />

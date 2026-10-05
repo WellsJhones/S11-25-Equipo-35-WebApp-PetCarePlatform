@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "client",
+    "name": "PetCare Platform",
     "slug": "client",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -24,7 +24,7 @@
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./src/assets/paw.png"
     },
     "scheme": "mypetcloud",
     "extra": {
