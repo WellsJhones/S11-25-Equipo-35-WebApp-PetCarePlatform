@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: petcare-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - PORT=8080
+      - JAVA_OPTS=-Xmx256m -Xss512k -XX:+UseSerialGC
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+    networks:
+      - petcare-net
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: petcare-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+    networks:
+      - petcare-net
+
+networks:
+  petcare-net:
+    driver: bridge
+
